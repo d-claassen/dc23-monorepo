@@ -30,6 +30,12 @@
 		},
 		"description": {
 			"type": "string"
+		},
+		"sameAs": {
+			"type": "string"
+		},
+		"specialtyId": {
+			"type": "string"
 		}
 	},
 	"textdomain": "dc23-portfolio",
