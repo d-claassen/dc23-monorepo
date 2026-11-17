@@ -1,0 +1,13 @@
+# Dependencies and build output (also ignored per plugin).
+node_modules/
+vendor/
+build/
+
+# Output of tools/build-plugin.
+/dist/
+
+# Local tooling.
+.cache/
+.phpunit.result.cache
+*.log
+.env
