@@ -26,7 +26,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
 }
 
-require_once 'vendor/autoload.php';
+// The release ZIP bundles its own autoloader. When the plugin is installed with Composer,
+// the project's autoloader already covers it and this file does not exist.
+if ( file_exists( __DIR__ . '/vendor/autoload.php' ) ) {
+	require_once __DIR__ . '/vendor/autoload.php';
+}
 
 /**
  * Registers the block using the metadata loaded from the `block.json` file.
