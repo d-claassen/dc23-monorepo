@@ -1,0 +1,59 @@
+name: Create a new block
+
+on:
+  workflow_dispatch:
+    inputs:
+      plugin:
+        description: 'Plugin directory under plugins/ (also the block namespace)'
+        required: true
+      slug:
+        description: 'Block slug and folder name'
+        required: true
+      title:
+        description: 'Display title for the block'
+        required: true
+      category:
+        description: 'Category name for the block'
+        required: false
+        default: ''
+
+jobs:
+  create:
+    name: Create block ${{ github.event.inputs.plugin }}/${{ github.event.inputs.slug }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    env:
+      PLUGIN: ${{ github.event.inputs.plugin }}
+      SLUG: ${{ github.event.inputs.slug }}
+      TITLE: ${{ github.event.inputs.title }}
+      CATEGORY: ${{ github.event.inputs.category }}
+
+    steps:
+      - name: Set up Git user
+        run: |
+          git config --global user.email "${{ github.actor }}@users.noreply.github.com"
+          git config --global user.name "${{ github.actor }}"
+
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Check plugin directory
+        run: test -f "plugins/$PLUGIN/$PLUGIN.php"
+
+      - name: Setup node
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: plugins/${{ github.event.inputs.plugin }}/.nvmrc
+
+      - name: Create block
+        working-directory: plugins/${{ github.event.inputs.plugin }}/src
+        run: npx @wordpress/create-block@latest "$SLUG" --title "$TITLE" --namespace "$PLUGIN" --category "$CATEGORY" --no-plugin --variant dynamic
+
+      - name: Push block
+        working-directory: plugins/${{ github.event.inputs.plugin }}/src
+        run: |
+          git add "$SLUG"
+          git commit -m "Create block $PLUGIN/$SLUG"
+          git push origin

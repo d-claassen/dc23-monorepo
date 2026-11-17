@@ -1,3 +1,4 @@
+# Each plugin is listed under its own directory. Phase 6 consolidates the groups across plugins.
 version: 2
 updates:
   - package-ecosystem: "github-actions"
@@ -8,7 +9,8 @@ updates:
       - d-claassen
 
   - package-ecosystem: "npm"
-    directory: "/"
+    directories:
+      - "/plugins/dc23-portfolio"
     schedule:
       interval: "weekly"
     assignees:
@@ -23,7 +25,8 @@ updates:
           - "@wordpress/*"
 
   - package-ecosystem: "composer"
-    directory: "/"
+    directories:
+      - "/plugins/dc23-portfolio"
     schedule:
       interval: "weekly"
     assignees:
