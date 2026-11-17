@@ -184,7 +184,9 @@ function run( command, args, cwd, capture = false ) {
 	// COMPOSER_ROOT_VERSION makes Composer record the plugin version instead of the monorepo branch
 	// in vendor/composer/installed.php, as a build in the plugin's own repository did.
 	const env = { ...process.env, COMPOSER_ROOT_VERSION: pkg.version };
-	return execFileSync( command, args, { cwd, env, encoding: 'utf8', stdio: capture ? [ 'ignore', 'pipe', 'inherit' ] : 'inherit' } );
+	// The npm pack listing includes the plugin's development vendor/ (thousands of files), so allow
+	// far more output than the 1 MB default.
+	return execFileSync( command, args, { cwd, env, encoding: 'utf8', maxBuffer: 512 * 1024 * 1024, stdio: capture ? [ 'ignore', 'pipe', 'inherit' ] : 'inherit' } );
 }
 
 function fail( message ) {
