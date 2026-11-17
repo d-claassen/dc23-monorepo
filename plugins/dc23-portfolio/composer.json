@@ -1,5 +1,8 @@
 {
-    "name": "dennis/dc23-portfolio",
+    "name": "d-claassen/dc23-portfolio",
+    "description": "Blocks and schema for a portfolio page.",
+    "type": "wordpress-plugin",
+    "license": "GPL-2.0-or-later",
     "autoload": {
         "psr-4": {
             "DC23\\Portfolio\\": "lib/"
