@@ -1,0 +1,63 @@
+# Each plugin is listed under its own directory. Phase 6 consolidates the groups across plugins.
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    assignees:
+      - d-claassen
+
+  - package-ecosystem: "npm"
+    directories:
+      - "/plugins/dc23-portfolio"
+    schedule:
+      interval: "weekly"
+    assignees:
+      - d-claassen
+    groups:
+      wordpress:
+        applies-to: version-updates
+        update-types:
+          - "minor"
+          - "patch"
+        patterns:
+          - "@wordpress/*"
+
+  - package-ecosystem: "composer"
+    directories:
+      - "/plugins/dc23-portfolio"
+    schedule:
+      interval: "weekly"
+    assignees:
+      - d-claassen
+    versioning-strategy: widen
+    allow:
+      - dependency-name: "*"
+        dependency-type: "all"
+    groups:
+      unit-tests:
+        patterns:
+          - "phpunit/*"
+          - "php-stubs/*"
+          - "brain/*"
+          - "antecedent/*"
+      static-analysis:
+        patterns:
+          - "nikic/php-parser"
+          - "phpstan/*"
+          - "szepeviktor/phpstan-wordpress"
+      code-style:
+        patterns:
+          - "yoast/yoastcs"
+          - "phpcsstandards/*"
+          - "phpcompatibility/*"
+          - "wp-coding-standards/*"
+          - "squizlabs/*"
+          - "slevomat/*"
+          - "automattic/vipwpcs"
+          - "dealerdirect/phpcodesniffer-composer-installer"
+      wp-compatibility:
+        patterns:
+          - "yoast/*"
+          - "wpackagist-plugin/*"

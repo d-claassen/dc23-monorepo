@@ -1,0 +1,208 @@
+name: 'CI'
+
+on:
+  push:
+    branches:
+      - main
+  pull_request: null
+  workflow_dispatch: null
+
+# Cancels all previous workflow runs for the same branch that have not yet completed.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  affected:
+    name: 'Affected plugins'
+    runs-on: ubuntu-latest
+    outputs:
+      plugins: ${{ steps.changed.outputs.plugins }}
+
+    steps:
+      - name: 'Checkout'
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: 'Setup Node'
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+
+      - name: 'List affected plugins'
+        id: changed
+        env:
+          EVENT: ${{ github.event_name }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PUSH_BEFORE: ${{ github.event.before }}
+        run: |
+          case "$EVENT" in
+            pull_request) BASE="$PR_BASE" ;;
+            push) BASE="$PUSH_BEFORE" ;;
+            *) BASE="--all" ;;
+          esac
+          PLUGINS="$(node tools/changed-plugins.mjs "$BASE" "$GITHUB_SHA")"
+          echo "Affected plugins: $PLUGINS"
+          echo "plugins=$PLUGINS" >> "$GITHUB_OUTPUT"
+
+  quality:
+    name: 'Quality Control: ${{ matrix.plugin }}'
+    needs: affected
+    if: ${{ needs.affected.outputs.plugins != '[]' }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        plugin: ${{ fromJSON( needs.affected.outputs.plugins ) }}
+
+    defaults:
+      run:
+        working-directory: plugins/${{ matrix.plugin }}
+
+    steps:
+      - name: 'Checkout'
+        uses: actions/checkout@v7
+
+      - name: 'Setup Node and node_modules cache'
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: plugins/${{ matrix.plugin }}/.nvmrc
+
+      - name: 'Setup PHP'
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+
+      - name: 'Validate composer.json and composer.lock'
+        run: 'composer validate --no-check-publish'
+        continue-on-error: true
+
+      - name: 'NPM install'
+        run: npm clean-install
+
+      - name: 'Composer install'
+        run: 'composer install --prefer-dist --no-progress --optimize-autoloader'
+
+      - name: 'Lint package.json'
+        run: 'npm run-script lint:pkg-json'
+
+      - name: 'Lint JS'
+        continue-on-error: true
+        run: 'npm run-script lint:js'
+
+      - name: 'Lint CSS'
+        run: 'npm run-script lint:css'
+
+      - name: 'Lint PHP'
+        run: 'composer phplint'
+
+      - name: 'PHP code style'
+        continue-on-error: true
+        run: 'composer phpcs'
+
+      - name: 'Build the plugin'
+        run: 'npm run-script build'
+
+      - name: 'Build distribution tree and ZIP'
+        working-directory: .
+        run: 'node tools/build-plugin.mjs ${{ matrix.plugin }} --skip-npm'
+
+      - name: 'Archive plugin zip'
+        uses: actions/upload-artifact@v7
+        with:
+          name: '${{ matrix.plugin }}'
+          path: 'dist/${{ matrix.plugin }}.zip'
+
+      - name: 'Archive distribution tree'
+        uses: actions/upload-artifact@v7
+        with:
+          name: '${{ matrix.plugin }}-dist'
+          path: 'dist/${{ matrix.plugin }}/'
+
+  phpunit:
+    name: 'PHPUnit: ${{ matrix.plugin }} / WP ${{ matrix.env.wp }} / PHP ${{ matrix.env.php }} / Composer ${{ matrix.env.deps }}'
+    needs: affected
+    if: ${{ needs.affected.outputs.plugins != '[]' }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        plugin: ${{ fromJSON( needs.affected.outputs.plugins ) }}
+        env:
+          # Stable PHP, WP, and deps.
+          - { php: '8.2', wp: '6.9', deps: 'locked' }
+          - { php: '8.3', wp: '6.9', deps: 'locked' }
+          - { php: '8.4', wp: '6.9', deps: 'locked' }
+          # Lowest PHP, WP, and deps.
+          - { php: '8.2', wp: '6.7', deps: 'lowest' }
+          # Unstable latest PHP and WP.
+          - { php: '8.5', wp: 'master', deps: 'highest' }
+
+    # Allow builds to fail on as-of-yet unreleased WordPress versions.
+    continue-on-error: ${{ matrix.env.wp == 'master' }}
+
+    env:
+      WP_ENV_CORE: ${{ format( 'WordPress/WordPress#{0}', matrix.env.wp ) }}
+
+    defaults:
+      run:
+        working-directory: plugins/${{ matrix.plugin }}
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: plugins/${{ matrix.plugin }}/.nvmrc
+
+      - name: 'Setup PHP'
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.env.php }}
+
+      - name: 'Validate composer.json and composer.lock'
+        run: 'composer validate --no-check-publish'
+
+      - name: 'NPM install'
+        run: npm install
+
+      - name: 'Composer install'
+        uses: ramsey/composer-install@v4
+        with:
+          working-directory: plugins/${{ matrix.plugin }}
+          dependency-versions: ${{ matrix.env.deps }}
+          composer-options: '--prefer-dist --optimize-autoloader'
+
+      - name: 'NPM WordPress dependency versions'
+        if: ${{ matrix.env.wp != 'master' }}
+        run: npm run-script packages-update -- --dist-tag=wp-${{ matrix.env.wp }}
+
+      - name: NPM build
+        run: npm run build
+
+      - name: Install WordPress and start the server
+        run: npm run wp-env start -- --xdebug=coverage || npm run wp-env start -- --xdebug=coverage
+
+      - name: 'Debug wp-env'
+        run: |
+          docker ps -a
+          npm run wp-env run -- tests-wordpress php -- --version
+          npm run wp-env run -- tests-cli wp core version
+          npm run wp-env run -- tests-cli wp plugin list
+
+      - name: Run PHPUnit tests
+        run: npm run wp-env run -- --env-cwd='wp-content/plugins/${{ matrix.plugin }}' tests-wordpress composer test -- -- --coverage-text --display-errors --display-warnings
+
+      - name: 'Archive test artifacts'
+        uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: 'test-results-${{ matrix.plugin }}-wp${{ matrix.env.wp }}-php${{ matrix.env.php }}-${{ matrix.env.deps }}'
+          path: 'plugins/${{ matrix.plugin }}/artifacts'
