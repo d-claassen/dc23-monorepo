@@ -6,7 +6,7 @@ Monorepo for the DC23 WordPress plugins. This repository is the canonical develo
 
 | Plugin | Directory | Distribution repository | Status |
 |---|---|---|---|
-| DC23 Portfolio | [`plugins/dc23-portfolio`](plugins/dc23-portfolio) | [d-claassen/dc23-portfolio](https://github.com/d-claassen/dc23-portfolio) | Developed here; releases from the monorepo are not set up yet |
+| DC23 Portfolio | [`plugins/dc23-portfolio`](plugins/dc23-portfolio) | [d-claassen/dc23-portfolio](https://github.com/d-claassen/dc23-portfolio) | Developed and released here ([release.md](docs/release.md)) |
 
 The other plugins (`dc23-excessive-schema`, `dc23-reading-time`, `dc23-software-downloads`, `dc23-tea`) are still developed in their own repositories and move here later.
 
@@ -16,6 +16,7 @@ The other plugins (`dc23-excessive-schema`, `dc23-reading-time`, `dc23-software-
 plugins/<slug>/   One WordPress plugin per directory. <slug> is also the name of its distribution
                   repository, its ZIP, the folder inside the ZIP and its Composer package
                   (d-claassen/<slug>).
+templates/        Files shared by every distribution repository (release-workflow/).
 tools/            Scripts used locally and in CI (Node.js, no dependencies).
 .github/          Workflows and Dependabot configuration for all plugins.
 docs/             Development and release documentation.
