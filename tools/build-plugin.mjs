@@ -7,8 +7,9 @@
  *
  * Output (in dist/, git-ignored):
  *   dist/<slug>/      Distribution tree: what the dedicated repository d-claassen/<slug> will contain.
- *                     Plugin files + build/ + a cleaned composer.json. No vendor/: Composer consumers
- *                     generate their own autoloader.
+ *                     Plugin files + build/ + a cleaned composer.json + the release workflow from
+ *                     templates/release-workflow/. No vendor/: Composer consumers generate their own
+ *                     autoloader.
  *   dist/<slug>.zip   Installable plugin ZIP (root folder <slug>/): the distribution tree without
  *                     composer.json, plus vendor/ with the production autoloader. Same shape as the
  *                     release asset that Git Updater installs.
@@ -35,6 +36,7 @@ const distDir = join( ROOT, 'dist' );
 const treeDir = join( distDir, slug );
 const zipStage = join( distDir, '.zip-stage', slug );
 const zipFile = join( distDir, `${ slug }.zip` );
+const RELEASE_WORKFLOW = '.github/workflows/release.yml';
 
 if ( ! existsSync( join( pluginDir, `${ slug }.php` ) ) ) {
 	fail( `plugins/${ slug }/${ slug }.php not found: the main plugin file must be named after the slug.` );
@@ -93,6 +95,9 @@ rmSync( join( distDir, '.composer-stage' ), { recursive: true, force: true } );
 // The distribution tree gets a composer.json without development-only and monorepo-only keys.
 writeFileSync( join( treeDir, 'composer.json' ), JSON.stringify( cleanComposer( composer ), null, '\t' ) + '\n' );
 
+// The distribution repository creates its own GitHub release from a tag, with the shared workflow.
+copy( join( ROOT, 'templates', 'release-workflow', 'release.yml' ), join( treeDir, RELEASE_WORKFLOW ) );
+
 // 4. Validate, then zip.
 validate( treeDir, { expectVendor: false, expectComposer: true } );
 validate( zipStage, { expectVendor: true, expectComposer: false } );
@@ -144,7 +149,18 @@ function validate( dir, { expectVendor, expectComposer } ) {
 	if ( existsSync( join( dir, 'composer.json' ) ) !== expectComposer ) {
 		fail( `${ where }: composer.json ${ expectComposer ? 'missing' : 'must not be present' }.` );
 	}
-	const forbidden = [ 'node_modules', 'tests', 'specs', '.github', '.wp-env.json', 'phpunit.xml.dist', 'composer.lock', 'package-lock.json' ];
+	// The distribution tree contains exactly one file in .github/: the release workflow. The ZIP none.
+	if ( existsSync( join( dir, '.github' ) ) ) {
+		const githubFiles = readdirSync( join( dir, '.github' ), { recursive: true, withFileTypes: true } )
+			.filter( ( entry ) => entry.isFile() )
+			.map( ( entry ) => join( entry.parentPath ?? entry.path, entry.name ).slice( dir.length + 1 ) );
+		if ( expectVendor || githubFiles.join() !== RELEASE_WORKFLOW ) {
+			fail( `${ where }: unexpected files in .github/: ${ githubFiles.join( ', ' ) }.` );
+		}
+	} else if ( ! expectVendor ) {
+		fail( `${ where }: ${ RELEASE_WORKFLOW } missing.` );
+	}
+	const forbidden = [ 'node_modules', 'tests', 'specs', '.wp-env.json', 'phpunit.xml.dist', 'composer.lock', 'package-lock.json' ];
 	for ( const path of forbidden ) {
 		if ( existsSync( join( dir, path ) ) ) {
 			fail( `${ where }: development file ${ path } must not be shipped.` );
