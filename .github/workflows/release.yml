@@ -1,0 +1,140 @@
+name: 'Release a plugin'
+
+# Releases one plugin to its distribution repository, d-claassen/<plugin>. Started by hand only;
+# nothing in this repository is released automatically. See docs/release.md.
+#
+#   publish = false (default): dry run. Runs the checks, bumps the version in the runner only,
+#                              builds and validates the plugin, and shows what would be published.
+#                              Nothing is pushed anywhere.
+#   publish = true:            also commits the version bump to main with tag <plugin>@X.Y.Z,
+#                              then runs tools/publish-plugin.mjs.
+
+on:
+  workflow_dispatch:
+    inputs:
+      plugin:
+        description: 'Plugin directory under plugins/, e.g. dc23-portfolio'
+        required: true
+        type: string
+      increment:
+        description: 'Version increment, or "none" to (re)publish the current version'
+        required: true
+        type: choice
+        options:
+          - 'patch'
+          - 'minor'
+          - 'major'
+          - 'none'
+        default: 'patch'
+      publish:
+        description: 'Publish to the distribution repository (unticked = dry run)'
+        required: false
+        type: boolean
+        default: false
+
+concurrency:
+  group: release-${{ inputs.plugin }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: 'Checks'
+    uses: ./.github/workflows/ci.yml
+    with:
+      plugins: '["${{ inputs.plugin }}"]'
+
+  release:
+    name: '${{ inputs.publish && ''Release'' || ''Dry run'' }} ${{ inputs.plugin }} (${{ inputs.increment }})'
+    needs: checks
+    runs-on: ubuntu-latest
+    # The environment holds DIST_REPOS_TOKEN and can require an approval before publishing.
+    environment: ${{ inputs.publish && 'release' || 'release-dry-run' }}
+    permissions:
+      contents: write
+
+    env:
+      PLUGIN: ${{ inputs.plugin }}
+      INCREMENT: ${{ inputs.increment }}
+      PUBLISH: ${{ inputs.publish }}
+
+    steps:
+      - name: 'Checkout main'
+        uses: actions/checkout@v7
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: 'Check the plugin directory'
+        run: |
+          test "$GITHUB_REF" = "refs/heads/main" || { echo "::error::Start releases from main (this run uses $GITHUB_REF)."; exit 1; }
+          test -f "plugins/$PLUGIN/$PLUGIN.php" || { echo "::error::plugins/$PLUGIN/$PLUGIN.php not found"; exit 1; }
+
+      - name: 'Setup Node'
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: plugins/${{ inputs.plugin }}/.nvmrc
+
+      - name: 'Setup PHP'
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          tools: composer
+
+      - name: 'Configure Git user'
+        run: |
+          git config --global user.name "${{ github.actor }}"
+          git config --global user.email "${{ github.actor }}@users.noreply.github.com"
+
+      - name: 'Bump the version'
+        working-directory: plugins/${{ inputs.plugin }}
+        run: |
+          if [ "$INCREMENT" != "none" ]; then
+            # Runs the plugin's own "version" script, which updates the plugin header and readme.txt.
+            npm version "$INCREMENT" --no-git-tag-version
+          fi
+          VERSION="$(node -p 'require("./package.json").version')"
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "Version: $VERSION"
+
+      - name: 'Commit the version bump'
+        if: ${{ inputs.increment != 'none' }}
+        run: |
+          if git ls-remote --exit-code --tags origin "refs/tags/$PLUGIN@$VERSION" > /dev/null; then
+            echo "::error::Tag $PLUGIN@$VERSION already exists in the monorepo."
+            exit 1
+          fi
+          git add "plugins/$PLUGIN"
+          git commit -m "Release $PLUGIN $VERSION"
+          git tag -a "$PLUGIN@$VERSION" -m "$PLUGIN $VERSION"
+          git show --stat HEAD
+
+      - name: 'Build and validate'
+        run: node tools/build-plugin.mjs "$PLUGIN"
+
+      - name: 'Archive the build'
+        uses: actions/upload-artifact@v7
+        with:
+          name: '${{ inputs.plugin }}-${{ env.VERSION }}'
+          path: |
+            dist/${{ inputs.plugin }}.zip
+            dist/${{ inputs.plugin }}/
+          include-hidden-files: true
+
+      - name: 'Dry run: what would be published'
+        if: ${{ ! inputs.publish }}
+        run: node tools/publish-plugin.mjs "$PLUGIN" --dry-run
+
+      - name: 'Push the version bump to the monorepo'
+        if: ${{ inputs.publish && inputs.increment != 'none' }}
+        run: git push --atomic origin HEAD:refs/heads/main "refs/tags/$PLUGIN@$VERSION"
+
+      - name: 'Publish to the distribution repository'
+        if: ${{ inputs.publish }}
+        env:
+          DIST_REPOS_TOKEN: ${{ secrets.DIST_REPOS_TOKEN }}
+        run: |
+          export MONOREPO_SHA="$(git rev-parse HEAD)"
+          node tools/publish-plugin.mjs "$PLUGIN"

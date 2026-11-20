@@ -6,11 +6,18 @@ on:
       - main
   pull_request: null
   workflow_dispatch: null
+  # The release workflow runs the same checks for the plugin it releases.
+  workflow_call:
+    inputs:
+      plugins:
+        description: 'JSON array of plugin slugs to check, instead of the affected plugins'
+        required: true
+        type: string
 
 # Cancels all previous workflow runs for the same branch that have not yet completed.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  group: ci-${{ inputs.plugins || github.ref }}
+  cancel-in-progress: ${{ inputs.plugins == '' || inputs.plugins == null }}
 
 permissions:
   contents: read
@@ -39,7 +46,13 @@ jobs:
           EVENT: ${{ github.event_name }}
           PR_BASE: ${{ github.event.pull_request.base.sha }}
           PUSH_BEFORE: ${{ github.event.before }}
+          REQUESTED: ${{ inputs.plugins }}
         run: |
+          if [ -n "$REQUESTED" ]; then
+            echo "Requested plugins: $REQUESTED"
+            echo "plugins=$REQUESTED" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
           case "$EVENT" in
             pull_request) BASE="$PR_BASE" ;;
             push) BASE="$PUSH_BEFORE" ;;

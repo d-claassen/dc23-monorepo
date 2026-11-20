@@ -43,7 +43,7 @@ This produces two things in `dist/`:
 
 | Output | Contents | Used for |
 |---|---|---|
-| `dist/<slug>/` | Files selected by `package.json#files`, including `build/`, plus a `composer.json` without development settings. **No `vendor/`.** | The distribution repository `d-claassen/<slug>`, which Composer installs from. Composer generates the autoloader for the whole project. |
+| `dist/<slug>/` | Files selected by `package.json#files`, including `build/`, plus a `composer.json` without development settings and the release workflow from `templates/release-workflow/`. **No `vendor/`.** | The distribution repository `d-claassen/<slug>`, which Composer installs from. Composer generates the autoloader for the whole project. |
 | `dist/<slug>.zip` | The same files under a `<slug>/` root folder, without `composer.json`, **plus `vendor/` with the production autoloader**. | Git Updater and manual installation, where no Composer runs. |
 
 The plugin's own `vendor/` (with development dependencies) is never shipped: the production autoloader is built in a separate staging directory.
@@ -73,4 +73,4 @@ npx @wordpress/create-block@latest <block> --namespace <slug> --no-plugin --vari
 
 ## Releases
 
-Releasing from the monorepo is not set up yet. Until it is, do not release plugins that live here from their old repository: changes made here would not be in that release.
+See [release.md](release.md). Plugins that live here are released only from the monorepo, never from their old repository's workflows.
