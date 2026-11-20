@@ -32,31 +32,55 @@ on:
         type: boolean
         default: false
 
-concurrency:
-  group: release-${{ inputs.plugin }}
-  cancel-in-progress: false
-
 permissions:
   contents: read
 
 jobs:
+  plugin:
+    name: 'Plugin'
+    runs-on: ubuntu-latest
+    outputs:
+      slug: ${{ steps.slug.outputs.slug }}
+
+    steps:
+      - name: 'Checkout'
+        uses: actions/checkout@v7
+
+      - name: 'Clean up and check the plugin name'
+        id: slug
+        env:
+          INPUT: ${{ inputs.plugin }}
+        run: |
+          # Strip whitespace that keyboards add (for example after autocompletion).
+          SLUG="$(printf '%s' "$INPUT" | tr -d '[:space:]')"
+          if ! printf '%s' "$SLUG" | grep -Eq '^[a-z0-9][a-z0-9-]*$' || [ ! -f "plugins/$SLUG/$SLUG.php" ]; then
+            echo "::error::'$INPUT' is not a plugin directory. Available: $(ls plugins | tr '\n' ' ')"
+            exit 1
+          fi
+          echo "Plugin: $SLUG"
+          echo "slug=$SLUG" >> "$GITHUB_OUTPUT"
+
   checks:
     name: 'Checks'
+    needs: plugin
     uses: ./.github/workflows/ci.yml
     with:
-      plugins: '["${{ inputs.plugin }}"]'
+      plugins: '["${{ needs.plugin.outputs.slug }}"]'
 
   release:
-    name: '${{ inputs.publish && ''Release'' || ''Dry run'' }} ${{ inputs.plugin }} (${{ inputs.increment }})'
-    needs: checks
+    name: '${{ inputs.publish && ''Release'' || ''Dry run'' }} ${{ needs.plugin.outputs.slug }} (${{ inputs.increment }})'
+    needs: [ plugin, checks ]
     runs-on: ubuntu-latest
+    concurrency:
+      group: release-${{ needs.plugin.outputs.slug }}
+      cancel-in-progress: false
     # The environment holds DIST_REPOS_TOKEN and can require an approval before publishing.
     environment: ${{ inputs.publish && 'release' || 'release-dry-run' }}
     permissions:
       contents: write
 
     env:
-      PLUGIN: ${{ inputs.plugin }}
+      PLUGIN: ${{ needs.plugin.outputs.slug }}
       INCREMENT: ${{ inputs.increment }}
       PUBLISH: ${{ inputs.publish }}
 
@@ -75,7 +99,7 @@ jobs:
       - name: 'Setup Node'
         uses: actions/setup-node@v7
         with:
-          node-version-file: plugins/${{ inputs.plugin }}/.nvmrc
+          node-version-file: plugins/${{ needs.plugin.outputs.slug }}/.nvmrc
 
       - name: 'Setup PHP'
         uses: shivammathur/setup-php@v2
@@ -89,7 +113,7 @@ jobs:
           git config --global user.email "${{ github.actor }}@users.noreply.github.com"
 
       - name: 'Bump the version'
-        working-directory: plugins/${{ inputs.plugin }}
+        working-directory: plugins/${{ needs.plugin.outputs.slug }}
         run: |
           if [ "$INCREMENT" != "none" ]; then
             # Runs the plugin's own "version" script, which updates the plugin header and readme.txt.
@@ -117,10 +141,10 @@ jobs:
       - name: 'Archive the build'
         uses: actions/upload-artifact@v7
         with:
-          name: '${{ inputs.plugin }}-${{ env.VERSION }}'
+          name: '${{ needs.plugin.outputs.slug }}-${{ env.VERSION }}'
           path: |
-            dist/${{ inputs.plugin }}.zip
-            dist/${{ inputs.plugin }}/
+            dist/${{ needs.plugin.outputs.slug }}.zip
+            dist/${{ needs.plugin.outputs.slug }}/
           include-hidden-files: true
 
       - name: 'Dry run: what would be published'
