@@ -43,7 +43,7 @@ This produces two things in `dist/`:
 
 | Output | Contents | Used for |
 |---|---|---|
-| `dist/<slug>/` | Files selected by `package.json#files`, including `build/`, plus a `composer.json` without development settings, the release workflow from `templates/release-workflow/` and a generated `.gitattributes` that keeps that workflow out of Composer installs. **No `vendor/`.** | The distribution repository `d-claassen/<slug>`, which Composer installs from. Composer generates the autoloader for the whole project. |
+| `dist/<slug>/` | Files selected by `package.json#files`, including `build/`, plus a `composer.json` without development settings, the release workflow and the `.gitattributes` from `templates/release-workflow/` (which keeps that workflow out of Composer installs). **No `vendor/`.** | The distribution repository `d-claassen/<slug>`, which Composer installs from. Composer generates the autoloader for the whole project. |
 | `dist/<slug>.zip` | The same files under a `<slug>/` root folder, without `composer.json`, **plus `vendor/` with the production autoloader**. | Git Updater and manual installation, where no Composer runs. |
 
 The plugin's own `vendor/` (with development dependencies) is never shipped: the production autoloader is built in a separate staging directory.
