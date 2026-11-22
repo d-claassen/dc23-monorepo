@@ -1,8 +1,3 @@
-# Copied into every distribution repository by tools/build-plugin.mjs, together with
-# .github/workflows/release.yml. Maintained in d-claassen/dc23-monorepo at
-# templates/release-workflow/.gitattributes.
-#
-# Composer installs a tag from GitHub's archive of it. These files are only needed in the
-# repository itself, so they are left out of that archive and of every Composer install.
+# Repository-only files stay out of installed copies of the plugin.
 /.github export-ignore
 /.gitattributes export-ignore

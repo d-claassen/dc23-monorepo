@@ -1,13 +1,7 @@
 name: 'Release a plugin'
 
-# Releases one plugin to its distribution repository, d-claassen/<plugin>. Started by hand only;
-# nothing in this repository is released automatically. See docs/release.md.
-#
-#   publish = false (default): dry run. Runs the checks, bumps the version in the runner only,
-#                              builds and validates the plugin, and shows what would be published.
-#                              Nothing is pushed anywhere.
-#   publish = true:            also commits the version bump to main with tag <plugin>@X.Y.Z,
-#                              then runs tools/publish-plugin.mjs.
+# Releases one plugin, by hand. Without "publish" it is a dry run that changes nothing.
+# See docs/release.md.
 
 on:
   workflow_dispatch:
