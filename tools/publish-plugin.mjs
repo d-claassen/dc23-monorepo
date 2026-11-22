@@ -1,25 +1,12 @@
 #!/usr/bin/env node
 /**
- * Publishes a built plugin to its distribution repository (d-claassen/<slug>).
+ * Publishes a built plugin to its distribution repository: release first, then main, so a site
+ * never sees a new version before its ZIP exists. Safe to repeat; never overwrites a release.
  *
- * Usage:
- *   node tools/publish-plugin.mjs <slug> [--dry-run]
+ * Usage: node tools/publish-plugin.mjs <slug> [--dry-run]
  *
- * Requires dist/<slug>/ and dist/<slug>.zip from tools/build-plugin.mjs.
- *
- * Environment:
- *   DIST_REPOS_TOKEN  Fine-grained token with Contents (read/write), Workflows (read/write) and
- *                     Actions (read) on the distribution repository. Not needed for --dry-run.
- *   DIST_REPO_URL     Override the repository URL (tests only). A local path skips the GitHub steps.
- *   MONOREPO_SHA      Monorepo commit the release is built from (default: git rev-parse HEAD).
- *
- * Steps, each safe to repeat:
- *   1. Commit dist/<slug>/ on top of the distribution repository's main, as tag vX.Y.Z only.
- *      An existing tag with the same files is reused; an existing tag with other files is an error.
- *   2. Wait for the distribution repository's Release workflow to create release vX.Y.Z with
- *      <slug>.zip, and check that this ZIP holds the same files as dist/<slug>.zip.
- *   3. Fast-forward the distribution repository's main to the tag. Only now do Git Updater sites
- *      see the new version, so they never get a version without its ZIP.
+ * Needs DIST_REPOS_TOKEN (not for a dry run). DIST_REPO_URL and MONOREPO_SHA override the
+ * defaults, for tests.
  */
 import { execFileSync } from 'node:child_process';
 import { cpSync, existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
@@ -58,7 +45,7 @@ if ( ! dryRun && ! isLocal && ! token ) {
 
 log( `${ dryRun ? 'Dry run: ' : '' }publishing ${ slug } ${ version } to ${ isLocal ? repoUrl : repo }` );
 
-// --- 1. Release commit and tag ---------------------------------------------------------------
+// Release commit and tag.
 
 const work = mkdtempSync( join( tmpdir(), `publish-${ slug }-` ) );
 process.on( 'exit', () => rmSync( work, { recursive: true, force: true } ) );
@@ -68,7 +55,6 @@ git( [ 'remote', 'add', 'origin', repoUrl ], work );
 git( [ 'fetch', '-q', '--depth=1', 'origin', 'refs/heads/main:refs/remotes/origin/main' ], work );
 const mainSha = git( [ 'rev-parse', 'refs/remotes/origin/main' ], work );
 
-// The tree the release commit must have: exactly the distribution tree.
 git( [ 'checkout', '-q', '-b', 'release', 'refs/remotes/origin/main' ], work );
 git( [ 'rm', '-r', '-q', '--ignore-unmatch', '.' ], work );
 for ( const entry of readdirSync( treeDir ) ) {
@@ -108,7 +94,7 @@ if ( remoteTag ) {
 	}
 }
 
-// --- 2. Release and ZIP in the distribution repository -----------------------------------------
+// The distribution repository creates the release; wait for it and check what sites will download.
 
 if ( dryRun ) {
 	log( 'Dry run: skipping the release check and the main update.' );
@@ -121,7 +107,7 @@ if ( isLocal ) {
 	await checkReleaseAsset();
 }
 
-// --- 3. Move main ------------------------------------------------------------------------------
+// Only now advertise the new version.
 
 const currentMain = git( [ 'ls-remote', 'origin', 'refs/heads/main' ], work ).split( /\s+/ )[ 0 ];
 if ( currentMain === releaseSha ) {

@@ -43,12 +43,10 @@ This produces two things in `dist/`:
 
 | Output | Contents | Used for |
 |---|---|---|
-| `dist/<slug>/` | Files selected by `package.json#files`, including `build/`, plus a `composer.json` without development settings and the release workflow from `templates/release-workflow/`. **No `vendor/`.** | The distribution repository `d-claassen/<slug>`, which Composer installs from. Composer generates the autoloader for the whole project. |
-| `dist/<slug>.zip` | The same files under a `<slug>/` root folder, without `composer.json`, **plus `vendor/` with the production autoloader**. | Git Updater and manual installation, where no Composer runs. |
+| `dist/<slug>/` | The plugin files selected by its `package.json#files`, plus what the distribution repository needs to publish releases. **No `vendor/`.** | The distribution repository `d-claassen/<slug>`, which Composer installs from. |
+| `dist/<slug>.zip` | The installable plugin, **including its own autoloader**. | Git Updater and manual installation. |
 
-The plugin's own `vendor/` (with development dependencies) is never shipped: the production autoloader is built in a separate staging directory.
-
-The build fails when, among other things, the plugin header version, `readme.txt` Stable tag and `package.json` version differ, `build/` is missing, or development files (tests, `node_modules`, lock files, wp-env or PHPUnit config) would be shipped.
+The build stops when the result would reach sites broken or with an inconsistent version.
 
 ## Continuous integration
 

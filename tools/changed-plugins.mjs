@@ -1,18 +1,9 @@
 #!/usr/bin/env node
 /**
- * Lists the plugins affected by a change, as a JSON array of slugs.
+ * Lists, as JSON, the plugins a change can affect: the ones it touches, the ones that depend on
+ * those, or all of them when shared files change.
  *
- * Usage:
- *   node tools/changed-plugins.mjs <base-ref> [<head-ref>]   plugins affected by base...head
- *   node tools/changed-plugins.mjs --all                      every plugin
- *
- * Rules:
- *   1. A change in plugins/<slug>/ affects <slug>.
- *   2. A plugin is also affected when a plugin it depends on is affected. Dependencies are
- *      read from the plugins' composer.json files (require, require-dev, suggest), so there
- *      is no hand-maintained list.
- *   3. A change anywhere outside plugins/ (root config, tools, workflows) affects every plugin.
- *   4. An unknown or missing base (first push, force push) affects every plugin.
+ * Usage: node tools/changed-plugins.mjs <base-ref> [<head-ref>] | --all
  */
 import { execFileSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
