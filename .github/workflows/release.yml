@@ -58,6 +58,7 @@ jobs:
     name: 'Checks'
     needs: plugin
     uses: ./.github/workflows/ci.yml
+    secrets: inherit
     with:
       plugins: '["${{ needs.plugin.outputs.slug }}"]'
 
