@@ -204,9 +204,9 @@ test.describe('Author Socials block', () => {
 
     // Fallback for pre-WP6.9
     const postPage = newPage || page;
-    // Verify social links render
-    const socialLinksContainer = postPage.locator('.wp-block-social-links');
-    await expect(socialLinksContainer).toBeVisible();
+    // Visitors see links to the author's profiles.
+    await expect(postPage.locator('a[href="https://linkedin.com/authorprofile"]')).toBeVisible();
+    await expect(postPage.locator('a[href="https://twitter.com/authorprofile"]')).toBeVisible();
   });
 
   // Test 11: Platform Filtering Works
