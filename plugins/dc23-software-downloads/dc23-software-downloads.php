@@ -21,7 +21,9 @@
 
 declare( strict_types=1 );
 
-require_once 'vendor/autoload.php';
+if ( file_exists( __DIR__ . '/vendor/autoload.php' ) ) {
+	require_once __DIR__ . '/vendor/autoload.php';
+}
 
 if ( ! function_exists( 'dc23_software_downloads_setup' ) ) :
 	/**
