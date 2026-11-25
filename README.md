@@ -6,9 +6,10 @@ Monorepo for the DC23 WordPress plugins. This repository is the canonical develo
 
 | Plugin | Directory | Distribution repository | Status |
 |---|---|---|---|
+| DC23 Excessive Schema | [`plugins/dc23-excessive-schema`](plugins/dc23-excessive-schema) | [d-claassen/dc23-excessive-schema](https://github.com/d-claassen/dc23-excessive-schema) | Developed here; first release from the monorepo pending |
 | DC23 Portfolio | [`plugins/dc23-portfolio`](plugins/dc23-portfolio) | [d-claassen/dc23-portfolio](https://github.com/d-claassen/dc23-portfolio) | Developed and released here ([release.md](docs/release.md)) |
 
-The other plugins (`dc23-excessive-schema`, `dc23-reading-time`, `dc23-software-downloads`, `dc23-tea`) are still developed in their own repositories and move here later.
+The other plugins (`dc23-reading-time`, `dc23-software-downloads`, `dc23-tea`) are still developed in their own repositories and move here later.
 
 ## Layout
 
