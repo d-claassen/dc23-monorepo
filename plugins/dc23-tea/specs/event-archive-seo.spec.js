@@ -44,6 +44,9 @@ test.describe( 'Yoast SEO on Events archive', () => {
 
 		// Save the changes.
 		await page.getByRole( 'button', { name: 'Save changes' } ).click();
+		await expect(
+			page.getByText( 'Your settings were saved successfully.' ).first()
+		).toBeVisible();
 	} );
 
 	test( 'SEO title matches the Yoast SEO setting', async ( {

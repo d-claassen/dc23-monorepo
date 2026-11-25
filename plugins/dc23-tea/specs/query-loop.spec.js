@@ -15,6 +15,8 @@ test.describe('Query Loop block with tribe_events', () => {
 		} );
 		if ( ( await skipTelemetry.count() ) > 0 ) {
 			await skipTelemetry.click();
+			// Skipping reloads the page; wait until the prompt is gone.
+			await expect( skipTelemetry ).toHaveCount( 0 );
 		}
 
 		// Enable block editor for events.
@@ -22,6 +24,7 @@ test.describe('Query Loop block with tribe_events', () => {
 		const checkbox = await page.getByRole( 'checkbox' ).first();
 		await checkbox.check();
 		await page.getByRole( 'button', { name: 'Save Changes' } ).click();
+		await expect( page.getByText( 'Settings saved.' ) ).toBeVisible();
 
 		// Bulk delete existing events.
 		await admin.visitAdminPage( 'edit.php', 'post_type=tribe_events' );
@@ -129,14 +132,19 @@ test.describe('Query Loop block with tribe_events', () => {
 
 		// Insert Query Loop block
 		await editor.insertBlock( { name: 'core/query' } );
-		// await editor.canvas
-		await page
-			.getByRole( 'document', { name: 'Block: Query Loop' } )
-			.getByRole( 'button', { name: 'Start blank' } )
-			.click();
-		await page
-			.getByLabel('Title & Date')
-			.click();
+
+		// Newer editors show the content in an iframe, older setups may not.
+		const editorFrame = page.locator( 'iframe[name="editor-canvas"]' );
+		await expect(
+			editorFrame.or( page.locator( '.editor-styles-wrapper' ) ).first()
+		).toBeVisible();
+		const canvas = ( await editorFrame.count() ) ? editor.canvas : page;
+		const queryLoop = canvas.getByRole( 'document', {
+			name: 'Block: Query Loop',
+		} );
+
+		await queryLoop.getByRole( 'button', { name: 'Start blank' } ).click();
+		await canvas.getByLabel( 'Title & Date' ).click();
 
 		// Open sidebar and expect Block tab to be shown.
 		await editor.openDocumentSettingsSidebar();
@@ -161,13 +169,8 @@ test.describe('Query Loop block with tribe_events', () => {
 		await postTypeSelector.click();
 		await postTypeSelector.selectOption('Event');
 
-		await expect(
-			page.getByRole( 'document', { name: 'Block: Query Loop' } )
-		).toContainText( 'Future Test Event')
-
-		await expect(
-			page.getByRole( 'document', { name: 'Block: Query Loop' } )
-		).toContainText( 'Past Test Event')
+		await expect( queryLoop ).toContainText( 'Future Test Event' );
+		await expect( queryLoop ).toContainText( 'Past Test Event' );
 	});
 
 	test('Query Loop block renders correctly on front end', async ({ admin, page, requestUtils }) => {

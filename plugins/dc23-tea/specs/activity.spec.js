@@ -14,11 +14,14 @@ test.describe( 'Dashboard Activity widget', async () => {
 		} );
 		if ( ( await skipTelemetry.count() ) > 0 ) {
 			await skipTelemetry.click();
+			// Skipping reloads the page; wait until the prompt is gone.
+			await expect( skipTelemetry ).toHaveCount( 0 );
 		}
 		// const checkbox = await page.getByRole( 'checkbox', { name: 'toggle_blocks_editor' } ).check();
 		const checkbox = await page.getByRole( 'checkbox' ).first();
 		await checkbox.check();
 		await page.getByRole( 'button', { name: 'Save Changes' } ).click();
+		await expect( page.getByText( 'Settings saved.' ) ).toBeVisible();
 
 		await admin.visitAdminPage( 'edit.php', 'post_type=tribe_events' );
 		await page.getByLabel( 'Select All' ).first().check();
