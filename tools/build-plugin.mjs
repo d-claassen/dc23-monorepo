@@ -47,17 +47,13 @@ for ( const file of files ) {
 	copy( join( pluginDir, file ), join( zipStage, file ) );
 }
 
+// The autoloader is generated the way the distribution repository does it for its release, next
+// to the shipped files, so the ZIP built here is the ZIP sites will get.
 const composer = readJson( join( pluginDir, 'composer.json' ) );
-const composerStage = join( distDir, '.composer-stage' );
-copy( join( pluginDir, 'composer.json' ), join( composerStage, 'composer.json' ) );
-const args = [ '--no-dev', '--no-interaction', '--no-scripts', '--no-plugins' ];
-if ( existsSync( join( pluginDir, 'composer.lock' ) ) ) {
-	copy( join( pluginDir, 'composer.lock' ), join( composerStage, 'composer.lock' ) );
-	run( 'composer', [ 'install', '--optimize-autoloader', '--no-progress', ...args ], composerStage );
-} else {
-	run( 'composer', [ 'dump-autoload', '--optimize', ...args ], composerStage );
-}
-cpSync( join( composerStage, 'vendor' ), join( zipStage, 'vendor' ), { recursive: true } );
+writeFileSync( join( zipStage, 'composer.json' ), JSON.stringify( publishedComposer( composer ) ) );
+run( 'composer', [ 'install', '--no-dev', '--optimize-autoloader', '--no-interaction', '--no-progress', '--no-scripts', '--no-plugins' ], zipStage );
+rmSync( join( zipStage, 'composer.json' ) );
+rmSync( join( zipStage, 'composer.lock' ), { force: true } );
 
 // The distribution repository is what Composer installs from, so it gets a composer.json without
 // development settings, plus what it needs to publish its own releases.
@@ -68,7 +64,6 @@ copy( join( ROOT, 'templates', 'release-workflow', '.gitattributes' ), join( tre
 checkWhatSitesGet( zipStage );
 run( 'zip', [ '-r', '-q', '-X', zipFile, slug ], dirname( zipStage ) );
 rmSync( dirname( zipStage ), { recursive: true, force: true } );
-rmSync( composerStage, { recursive: true, force: true } );
 
 console.log( `\nBuilt ${ slug } ${ pkg.version }: ${ relative( treeDir ) }/ and ${ relative( zipFile ) }` );
 

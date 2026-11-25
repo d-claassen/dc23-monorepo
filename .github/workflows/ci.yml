@@ -106,10 +106,10 @@ jobs:
 
       - name: 'Lint JS'
         continue-on-error: true
-        run: 'npm run-script lint:js'
+        run: 'npm run-script --if-present lint:js'
 
       - name: 'Lint CSS'
-        run: 'npm run-script lint:css'
+        run: 'npm run-script --if-present lint:css'
 
       - name: 'Lint PHP'
         run: 'composer phplint'
@@ -119,7 +119,7 @@ jobs:
         run: 'composer phpcs'
 
       - name: 'Build the plugin'
-        run: 'npm run-script build'
+        run: 'npm run-script --if-present build'
 
       - name: 'Build distribution tree and ZIP'
         working-directory: .
@@ -198,7 +198,7 @@ jobs:
         run: npm run-script packages-update -- --dist-tag=wp-${{ matrix.env.wp }}
 
       - name: NPM build
-        run: npm run build
+        run: npm run-script --if-present build
 
       - name: Install WordPress and start the server
         run: npm run wp-env start -- --xdebug=coverage || npm run wp-env start -- --xdebug=coverage
