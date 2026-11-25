@@ -1,5 +1,8 @@
 {
-    "name": "dennis/dc23-tea",
+    "name": "d-claassen/dc23-tea",
+    "description": "A plugin to help list the events you attend(ed).",
+    "type": "wordpress-plugin",
+    "license": "GPL-2.0-or-later",
     "autoload": {
         "psr-4": {
             "DC23\\TheEventAttendee\\": "lib/"
@@ -12,12 +15,18 @@
         "composer/installers": "^2.0",
         "phpunit/phpunit": "^11.5",
         "yoast/phpunit-polyfills": "^4.0",
-        "dennis/dc23-excessive-schema": "^0.4.0"
+        "d-claassen/dc23-excessive-schema": "*@dev"
     },
     "repositories": {
         "dc23-excessive-schema": {
-            "type": "vcs",
-            "url": "https://github.com/d-claassen/dc23-excessive-schema"
+            "type": "path",
+            "url": "../dc23-excessive-schema",
+            "options": {
+                "symlink": false,
+                "versions": {
+                    "d-claassen/dc23-excessive-schema": "dev-main"
+                }
+            }
         },
         "wpackagist": {
             "type": "composer",
@@ -49,5 +58,11 @@
         "phplint": "Check the PHP files for parse errors.",
         "phpcs": "Check the PHP files for code style violations and best practices.",
         "test": "Test the PHP functionality behaves as expected."
+    },
+    "suggest": {
+        "d-claassen/dc23-excessive-schema": "Adds this plugin's content as main entity to the schema graph."
+    },
+    "conflict": {
+        "d-claassen/dc23-excessive-schema": ">=0.6"
     }
 }

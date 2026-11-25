@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5b113ad8a9268be3c14b36c1882f2887",
+    "content-hash": "8a6866b6f1d4850cdf12d83037ab431c",
     "packages": [],
     "packages-dev": [
         {
@@ -208,6 +208,60 @@
             "time": "2024-06-24T20:46:46+00:00"
         },
         {
+            "name": "d-claassen/dc23-excessive-schema",
+            "version": "dev-main",
+            "dist": {
+                "type": "path",
+                "url": "../dc23-excessive-schema",
+                "reference": "8dceb600e9f1c04b8d4920037cd87108dc294ac2"
+            },
+            "require": {
+                "php": ">=8.2"
+            },
+            "require-dev": {
+                "composer/installers": "^2.0",
+                "phpunit/phpunit": "^11.5",
+                "wpackagist-plugin/wordpress-seo": ">=24.0,<=28.7",
+                "yoast/phpunit-polyfills": "^4.0",
+                "yoast/yoastcs": "^3.1"
+            },
+            "type": "wordpress-plugin",
+            "extra": {
+                "installer-paths": {
+                    "vendor/wpackagist/{$name}/": [
+                        "type:wordpress-plugin"
+                    ]
+                }
+            },
+            "autoload": {
+                "files": [
+                    "lib/functions.php"
+                ],
+                "psr-4": {
+                    "DC23\\ExcessiveSchema\\": "lib/"
+                }
+            },
+            "scripts": {
+                "phplint": [
+                    "@php ./vendor/bin/parallel-lint . -e php --show-deprecated --exclude vendor --exclude .git"
+                ],
+                "phpcs": [
+                    "@php ./vendor/bin/phpcs --runtime-set ignore_warnings_on_exit 1"
+                ],
+                "test": [
+                    "@php ./vendor/bin/phpunit --process-isolation"
+                ]
+            },
+            "license": [
+                "GPL-2.0-or-later"
+            ],
+            "description": "Template-level schema enrichment for WordPress Query Loop blocks",
+            "transport-options": {
+                "symlink": false,
+                "relative": true
+            }
+        },
+        {
             "name": "dealerdirect/phpcodesniffer-composer-installer",
             "version": "v1.2.1",
             "source": {
@@ -302,67 +356,6 @@
                 }
             ],
             "time": "2026-05-06T08:26:05+00:00"
-        },
-        {
-            "name": "dennis/dc23-excessive-schema",
-            "version": "v0.4.8",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/d-claassen/dc23-excessive-schema.git",
-                "reference": "4338d397dc3f75b58448ec73475cdf96a4efa7ba"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/d-claassen/dc23-excessive-schema/zipball/4338d397dc3f75b58448ec73475cdf96a4efa7ba",
-                "reference": "4338d397dc3f75b58448ec73475cdf96a4efa7ba",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=8.2"
-            },
-            "require-dev": {
-                "composer/installers": "^2.0",
-                "phpunit/phpunit": "^11.5",
-                "wpackagist-plugin/wordpress-seo": ">=24.0,<=28.1",
-                "yoast/phpunit-polyfills": "^4.0",
-                "yoast/yoastcs": "^3.1"
-            },
-            "type": "wordpress-plugin",
-            "extra": {
-                "installer-paths": {
-                    "vendor/wpackagist/{$name}/": [
-                        "type:wordpress-plugin"
-                    ]
-                }
-            },
-            "autoload": {
-                "files": [
-                    "lib/functions.php"
-                ],
-                "psr-4": {
-                    "DC23\\ExcessiveSchema\\": "lib/"
-                }
-            },
-            "scripts": {
-                "phplint": [
-                    "@php ./vendor/bin/parallel-lint . -e php --show-deprecated --exclude vendor --exclude .git"
-                ],
-                "phpcs": [
-                    "@php ./vendor/bin/phpcs --runtime-set ignore_warnings_on_exit 1"
-                ],
-                "test": [
-                    "@php ./vendor/bin/phpunit --process-isolation"
-                ]
-            },
-            "license": [
-                "GPL-2.0-or-later"
-            ],
-            "description": "Template-level schema enrichment for WordPress Query Loop blocks",
-            "support": {
-                "source": "https://github.com/d-claassen/dc23-excessive-schema/tree/v0.4.8",
-                "issues": "https://github.com/d-claassen/dc23-excessive-schema/issues"
-            },
-            "time": "2026-07-15T20:10:27+00:00"
         },
         {
             "name": "myclabs/deep-copy",
@@ -3169,10 +3162,12 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": {
+        "d-claassen/dc23-excessive-schema": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {},
     "platform-dev": {},
-    "plugin-api-version": "2.9.0"
+    "plugin-api-version": "2.6.0"
 }
