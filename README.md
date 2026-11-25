@@ -8,8 +8,10 @@ Monorepo for the DC23 WordPress plugins. This repository is the canonical develo
 |---|---|---|---|
 | DC23 Excessive Schema | [`plugins/dc23-excessive-schema`](plugins/dc23-excessive-schema) | [d-claassen/dc23-excessive-schema](https://github.com/d-claassen/dc23-excessive-schema) | Developed here; first release from the monorepo pending |
 | DC23 Portfolio | [`plugins/dc23-portfolio`](plugins/dc23-portfolio) | [d-claassen/dc23-portfolio](https://github.com/d-claassen/dc23-portfolio) | Developed and released here ([release.md](docs/release.md)) |
+| DC23 Software Downloads | [`plugins/dc23-software-downloads`](plugins/dc23-software-downloads) | [d-claassen/dc23-software-downloads](https://github.com/d-claassen/dc23-software-downloads) | Developed here; first release from the monorepo pending |
+| The Event Attendee | [`plugins/dc23-tea`](plugins/dc23-tea) | [d-claassen/dc23-tea](https://github.com/d-claassen/dc23-tea) | Developed here; first release from the monorepo pending |
 
-The other plugins (`dc23-reading-time`, `dc23-software-downloads`, `dc23-tea`) are still developed in their own repositories and move here later.
+`dc23-reading-time` is still developed in its own repository and moves here later.
 
 ## Layout
 
