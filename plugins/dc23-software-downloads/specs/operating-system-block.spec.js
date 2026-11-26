@@ -6,6 +6,15 @@ const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
 const noop = () => {};
 const DEBUG_MODE = false;
 
+// Older plugin versions keep the editor content out of the iframe newer editors use.
+async function editorCanvas( page, editor ) {
+	const frame = page.locator( 'iframe[name="editor-canvas"]' );
+	await expect(
+		frame.or( page.locator( '.editor-styles-wrapper' ) ).first()
+	).toBeVisible();
+	return ( await frame.count() ) ? editor.canvas : page;
+}
+
 test.describe( 'Block "Application category"', () => {
 	let consoleLogs = [];
 	
@@ -55,7 +64,7 @@ test.describe( 'Block "Application category"', () => {
 
 		// Then the value shows inside editor.
 		await expect(
-			editor.canvas.locator('[data-type="dc23-software-downloads/application-category"]')
+			( await editorCanvas( page, editor ) ).locator('[data-type="dc23-software-downloads/application-category"]')
 		).toContainText( 'Health application' );
 	} );
     
@@ -90,7 +99,7 @@ test.describe( 'Block "Application category"', () => {
 
 		// Then the value shows inside editor.
 		await expect(
-			editor.canvas.locator('[data-type="dc23-software-downloads/application-category"]')
+			( await editorCanvas( page, editor ) ).locator('[data-type="dc23-software-downloads/application-category"]')
 		).toContainText( 'Travel application' );
 	} );
 	
