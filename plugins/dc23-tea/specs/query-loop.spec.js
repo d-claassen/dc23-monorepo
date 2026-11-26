@@ -163,9 +163,11 @@ test.describe('Query Loop block with tribe_events', () => {
 		}
 
 		// Change post type to tribe_events in block settings
+		// The post types load after the settings appear; until then the
+		// control can briefly take another form.
 		const postTypeSelector = page
 			.getByRole( 'region', { name: 'Settings' } )
-			.getByLabel( 'Post type' );
+			.getByRole( 'combobox', { name: 'Post type' } );
 		await postTypeSelector.click();
 		await postTypeSelector.selectOption('Event');
 
