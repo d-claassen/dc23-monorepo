@@ -168,7 +168,7 @@ jobs:
           - { php: '8.3', wp: '6.9', deps: 'locked' }
           - { php: '8.4', wp: '6.9', deps: 'locked' }
           # Lowest PHP, WP, and deps.
-          - { php: '8.2', wp: '6.7', deps: 'lowest' }
+          - { php: '8.2', wp: '6.8', deps: 'lowest' }
           # Unstable latest PHP and WP.
           - { php: '8.5', wp: 'master', deps: 'highest' }
 
