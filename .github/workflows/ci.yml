@@ -22,6 +22,10 @@ concurrency:
 permissions:
   contents: read
 
+env:
+  # Some plugins test against premium Yoast plugins from my.yoast.com.
+  COMPOSER_AUTH: ${{ secrets.MYYOAST_TOKEN != '' && format( '{{"http-basic":{{"my.yoast.com":{{"username":"token","password":"{0}"}}}}}}', secrets.MYYOAST_TOKEN ) || '{}' }}
+
 jobs:
   affected:
     name: 'Affected plugins'
@@ -104,12 +108,20 @@ jobs:
       - name: 'Lint package.json'
         run: 'npm run-script lint:pkg-json'
 
+      - name: 'Check engines and licenses'
+        run: |
+          npm run-script --if-present check-engines
+          npm run-script --if-present check-licenses
+
+      - name: 'Lint Markdown'
+        run: 'npm run-script --if-present lint:md:docs'
+
       - name: 'Lint JS'
         continue-on-error: true
         run: 'npm run-script --if-present lint:js'
 
       - name: 'Lint CSS'
-        run: 'npm run-script --if-present lint:css'
+        run: 'npm run-script --if-present lint:css -- --allow-empty-input'
 
       - name: 'Lint PHP'
         run: 'composer phplint'
@@ -117,6 +129,9 @@ jobs:
       - name: 'PHP code style'
         continue-on-error: true
         run: 'composer phpcs'
+
+      - name: 'Test JS units'
+        run: 'npm run-script --if-present test:unit -- --passWithNoTests'
 
       - name: 'Build the plugin'
         run: 'npm run-script --if-present build'
@@ -137,8 +152,8 @@ jobs:
           name: '${{ matrix.plugin }}-dist'
           path: 'dist/${{ matrix.plugin }}/'
 
-  phpunit:
-    name: 'PHPUnit: ${{ matrix.plugin }} / WP ${{ matrix.env.wp }} / PHP ${{ matrix.env.php }} / Composer ${{ matrix.env.deps }}'
+  tests:
+    name: 'Tests: ${{ matrix.plugin }} / WP ${{ matrix.env.wp }} / PHP ${{ matrix.env.php }} / Composer ${{ matrix.env.deps }}'
     needs: affected
     if: ${{ needs.affected.outputs.plugins != '[]' }}
     runs-on: ubuntu-latest
@@ -153,7 +168,7 @@ jobs:
           - { php: '8.3', wp: '6.9', deps: 'locked' }
           - { php: '8.4', wp: '6.9', deps: 'locked' }
           # Lowest PHP, WP, and deps.
-          - { php: '8.2', wp: '6.7', deps: 'lowest' }
+          - { php: '8.2', wp: '6.8', deps: 'lowest' }
           # Unstable latest PHP and WP.
           - { php: '8.5', wp: 'master', deps: 'highest' }
 
@@ -209,6 +224,13 @@ jobs:
           npm run wp-env run -- tests-wordpress php -- --version
           npm run wp-env run -- tests-cli wp core version
           npm run wp-env run -- tests-cli wp plugin list
+
+      - name: 'End-to-end tests'
+        run: |
+          if node -e 'process.exit( require( "./package.json" ).scripts?.[ "test:e2e" ] ? 0 : 1 )'; then
+            npx playwright install chromium firefox webkit --with-deps
+            npm run test:e2e
+          fi
 
       - name: Run PHPUnit tests
         run: npm run wp-env run -- --env-cwd='wp-content/plugins/${{ matrix.plugin }}' tests-wordpress composer test -- -- --coverage-text --display-errors --display-warnings

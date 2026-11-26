@@ -12,6 +12,8 @@ updates:
     directories:
       - "/plugins/dc23-excessive-schema"
       - "/plugins/dc23-portfolio"
+      - "/plugins/dc23-software-downloads"
+      - "/plugins/dc23-tea"
     schedule:
       interval: "weekly"
     assignees:
@@ -29,6 +31,8 @@ updates:
     directories:
       - "/plugins/dc23-excessive-schema"
       - "/plugins/dc23-portfolio"
+      - "/plugins/dc23-software-downloads"
+      - "/plugins/dc23-tea"
     schedule:
       interval: "weekly"
     assignees:
