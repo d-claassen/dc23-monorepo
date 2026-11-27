@@ -12,6 +12,7 @@ updates:
     directories:
       - "/plugins/dc23-excessive-schema"
       - "/plugins/dc23-portfolio"
+      - "/plugins/dc23-reading-time"
       - "/plugins/dc23-software-downloads"
       - "/plugins/dc23-tea"
     schedule:
@@ -31,6 +32,7 @@ updates:
     directories:
       - "/plugins/dc23-excessive-schema"
       - "/plugins/dc23-portfolio"
+      - "/plugins/dc23-reading-time"
       - "/plugins/dc23-software-downloads"
       - "/plugins/dc23-tea"
     schedule:
