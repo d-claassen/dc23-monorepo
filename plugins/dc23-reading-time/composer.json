@@ -1,7 +1,8 @@
 {
-	"name": "d-claassen/reading-time",
+	"name": "d-claassen/dc23-reading-time",
 	"description": "A WordPress plugin focused on reading time.",
-	"type": "project",
+	"type": "wordpress-plugin",
+	"license": "GPL-2.0-or-later",
 	"authors": [
 		{
 			"name": "Dennis Claassen",
@@ -55,10 +56,10 @@
 		}
 	},
 	"scripts": {
-		"lint": [
+		"phplint": [
 			"@php ./vendor/bin/parallel-lint . -e php --show-deprecated --exclude vendor --exclude .git"
 		],
-		"cs": [
+		"phpcs": [
 			"@php ./vendor/bin/phpcs --runtime-set ignore_warnings_on_exit 1"
 		],
 		"test": [
