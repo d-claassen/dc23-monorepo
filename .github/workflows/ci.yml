@@ -164,9 +164,9 @@ jobs:
         plugin: ${{ fromJSON( needs.affected.outputs.plugins ) }}
         env:
           # Stable PHP, WP, and deps.
-          - { php: '8.2', wp: '6.9', deps: 'locked' }
-          - { php: '8.3', wp: '6.9', deps: 'locked' }
-          - { php: '8.4', wp: '6.9', deps: 'locked' }
+          - { php: '8.2', wp: '7.1', deps: 'locked' }
+          - { php: '8.3', wp: '7.1', deps: 'locked' }
+          - { php: '8.4', wp: '7.1', deps: 'locked' }
           # Lowest PHP, WP, and deps.
           - { php: '8.2', wp: '6.8', deps: 'lowest' }
           # Unstable latest PHP and WP.
@@ -208,9 +208,18 @@ jobs:
           dependency-versions: ${{ matrix.env.deps }}
           composer-options: '--prefer-dist --optimize-autoloader'
 
+      # WordPress publishes its matching packages some time after a release; until then the
+      # locked packages are the closest match.
       - name: 'NPM WordPress dependency versions'
         if: ${{ matrix.env.wp != 'master' }}
-        run: npm run-script packages-update -- --dist-tag=wp-${{ matrix.env.wp }}
+        env:
+          DIST_TAG: wp-${{ matrix.env.wp }}
+        run: |
+          if [ -n "$(npm view "@wordpress/scripts@$DIST_TAG" version 2>/dev/null)" ]; then
+            npm run-script packages-update -- --dist-tag="$DIST_TAG"
+          else
+            echo "::notice::No $DIST_TAG packages are published yet; testing with the locked versions."
+          fi
 
       - name: NPM build
         run: npm run-script --if-present build
