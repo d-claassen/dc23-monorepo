@@ -9,6 +9,13 @@ test.describe( 'Sidebar panel', () => {
 			'edit.php',
 			'page=tec-events-settings&tab=general-editing-tab&post_type=tribe_events'
 		);
+		// The Events Calendar can send the first visit after activation to its setup guide.
+		if ( ! page.url().includes( 'page=tec-events-settings' ) ) {
+			await admin.visitAdminPage(
+				'edit.php',
+				'page=tec-events-settings&tab=general-editing-tab&post_type=tribe_events'
+			);
+		}
 		const skipTelemetry = await page.getByRole( 'button', {
 			name: 'Skip',
 		} );

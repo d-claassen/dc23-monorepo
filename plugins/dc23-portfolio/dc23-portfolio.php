@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       DC23 Portfolio
  * Description:       A plugin to help list your portfolio.
- * Requires at least: 6.6
+ * Requires at least: 6.8
  * Requires PHP:      7.2
  * Requires Plugins:  wordpress-seo
  * Version:           0.4.3
