@@ -8,6 +8,13 @@ test.describe('Query Loop block with tribe_events', () => {
 			'edit.php',
 			'page=tec-events-settings&tab=general-editing-tab&post_type=tribe_events'
 		);
+		// The Events Calendar can send the first visit after activation to its setup guide.
+		if ( ! page.url().includes( 'page=tec-events-settings' ) ) {
+			await admin.visitAdminPage(
+				'edit.php',
+				'page=tec-events-settings&tab=general-editing-tab&post_type=tribe_events'
+			);
+		}
 
 		// Skip telemetry alert if showing.
 		const skipTelemetry = await page.getByRole( 'button', {
@@ -32,7 +39,8 @@ test.describe('Query Loop block with tribe_events', () => {
 		const bulkAction = await page
 			.getByLabel( 'Select bulk action' )
 			.first();
-		if ( ( await bulkAction.count() ) > 0 ) {
+		// Bulk actions only show when there are events to remove.
+		if ( await bulkAction.isVisible() ) {
 			await bulkAction.selectOption( 'trash' );
 			await page.getByRole( 'button', { name: 'Apply' } ).first().click();
 		}

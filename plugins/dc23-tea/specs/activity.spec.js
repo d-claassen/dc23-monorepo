@@ -9,6 +9,13 @@ test.describe( 'Dashboard Activity widget', async () => {
 			'edit.php',
 			'page=tec-events-settings&tab=general-editing-tab&post_type=tribe_events'
 		);
+		// The Events Calendar can send the first visit after activation to its setup guide.
+		if ( ! page.url().includes( 'page=tec-events-settings' ) ) {
+			await admin.visitAdminPage(
+				'edit.php',
+				'page=tec-events-settings&tab=general-editing-tab&post_type=tribe_events'
+			);
+		}
 		const skipTelemetry = await page.getByRole( 'button', {
 			name: 'Skip',
 		} );
@@ -28,7 +35,8 @@ test.describe( 'Dashboard Activity widget', async () => {
 		const bulkAction = await page
 			.getByLabel( 'Select bulk action' )
 			.first();
-		if ( ( await bulkAction.count() ) > 0 ) {
+		// Bulk actions only show when there are events to remove.
+		if ( await bulkAction.isVisible() ) {
 			await bulkAction.selectOption( 'trash' );
 			await page.getByRole( 'button', { name: 'Apply' } ).first().click();
 		}
