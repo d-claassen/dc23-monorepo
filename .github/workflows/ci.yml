@@ -208,8 +208,8 @@ jobs:
           dependency-versions: ${{ matrix.env.deps }}
           composer-options: '--prefer-dist --optimize-autoloader'
 
-      # WordPress publishes its matching packages some time after a release; until then the
-      # locked packages are the closest match.
+      # Tests should use the packages of the WordPress version they run against. WordPress does not
+      # always publish them, so a row without them carries on, but says it is not representative.
       - name: 'NPM WordPress dependency versions'
         if: ${{ matrix.env.wp != 'master' }}
         env:
@@ -218,7 +218,7 @@ jobs:
           if [ -n "$(npm view "@wordpress/scripts@$DIST_TAG" version 2>/dev/null)" ]; then
             npm run-script packages-update -- --dist-tag="$DIST_TAG"
           else
-            echo "::notice::No $DIST_TAG packages are published yet; testing with the locked versions."
+            echo "::warning::No $DIST_TAG packages are published; this row uses the locked versions, not the packages of the WordPress version it tests."
           fi
 
       - name: NPM build
