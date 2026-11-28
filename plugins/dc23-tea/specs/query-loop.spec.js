@@ -159,8 +159,8 @@ test.describe('Query Loop block with tribe_events', () => {
 		await expect(
 			page
 				.getByRole( 'region', { name: 'Editor settings' } )
-				.getByRole( 'tab', { selected: true } )
-		).toHaveText( 'Block' );
+				.getByRole( 'tab', { name: 'Block', exact: true } )
+		).toHaveAttribute( 'aria-selected', 'true' );
 
 		// change to custom query type, needed since WP 6.8.2.
 		const queryTypeSelector = page
