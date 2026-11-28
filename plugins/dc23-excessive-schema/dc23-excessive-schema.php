@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       DC23 Excessive Schema
  * Description:       Template-level schema enrichment: connects WebPage to Query Loop sections via ItemList nodes.
- * Requires at least: 6.6
+ * Requires at least: 6.8
  * Requires PHP:      8.2
  * Requires Plugins:  wordpress-seo
  * Version:           0.5.0

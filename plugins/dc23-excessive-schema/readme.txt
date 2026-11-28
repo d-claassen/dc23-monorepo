@@ -1,8 +1,8 @@
 === DC23 Excessive Schema ===
 Contributors: dennisclaassen
 Tags: schema, seo, yoast, structured-data, query-loop
-Requires at least: 6.6
-Tested up to: 6.9
+Requires at least: 6.8
+Tested up to: 7.1
 Requires PHP: 8.2
 Stable tag: 0.5.0
 License: GPLv2 or later
